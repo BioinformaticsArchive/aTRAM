@@ -141,7 +141,7 @@ foreach my $target (@targetnames) {
 
 	# for each sample:
 	foreach my $sample (@samplenames) {
-		my $outname = "$target.$sample";
+		my $outname = "$target";
 		printlog ("Processing $outname...");
 
 		my $memory_flag = "";
@@ -158,7 +158,7 @@ foreach my $target (@targetnames) {
 
 		if ($assembler ne "") { $assembler = "-assemble $assembler"; }
 
-		my $atram_outname = File::Spec->catfile($atram_dir, $outname);
+		my $atram_outname = File::Spec->catfile($sample, $outname);
 # 		my $atram_result = run_command ("$atrampath/aTRAM.pl", "-reads $samples->{$sample} -target $targets->{$target} -iter $iter -ins_length $ins_length -frac $frac $assembler -out $atram_outname -kmer $kmer $complete_flag $processes_flag $memory_flag $debug_flag -log $log_file", {"no_exit"=>1}); # don't exit because we want to capture a nonzero result.
 
 # 		if ($atram_result) {
