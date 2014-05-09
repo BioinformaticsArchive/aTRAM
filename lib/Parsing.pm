@@ -21,7 +21,6 @@ sub parsefasta {
 	my $taxa = {};
 	my @taxanames = ();
 	open fileIN, "<:crlf", "$fastafile";
-	my $input = readline fileIN;
 	my $taxonlabel = "";
 	my $sequence = "";
 	while (my $input = readline fileIN) {
