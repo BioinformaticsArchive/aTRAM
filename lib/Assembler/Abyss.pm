@@ -5,6 +5,17 @@ use System;
 use Parsing;
 use Configuration;
 
+
+###  Set these at each iteration
+# -c minimum k-mer coverage
+#  -e minimum k-mer errossion
+#  -n number of pairs to make a contig
+
+# Assembler modules need to know:
+	# where to find the short reads (pass this in as a file name)
+	# what the assembly parameters are. (pass this in as a hash)
+# Assembler modules should return a hash of the resulting contigs.
+
 my $binaries = {'abyss-pe' => "abyss-pe"};
 
 sub get_binaries {
@@ -15,10 +26,6 @@ sub assembler {
 	my $self = shift;
 	my $short_read_file = shift;
 	my $params = shift;
-	
-###############
-#### need to split the reads into two files return  $shortreadfile.read1  $shortreadfile.read2
-##############	
 #        print "spliting short read file into two files. $short_read_file $short_read_file\_1.fasta $short_read_file\_2.fasta\n";
 	open FH, "<$short_read_file";
 	open RD1, ">$short_read_file\_1.fasta";
@@ -72,25 +79,18 @@ sub assembler {
 	truncate "$tempdir/Log", 0;
 	if ($longreads ne "") {
 	    $kmer2= 2*$kmer-10;
-	    ## abyss single endd
-	    my $string ="v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file\_1.fasta $short_read_file\_2.fasta $longreads'";
 	    ### abyss paired end
-##	    my $string ="v=-v k=$kmer name=$short_read_file\_temp lib='LIB' LIB='$short_read_file\_1.fasta $short_read_file\_2.fasta' se='$longreads'";
+	    my $string ="v=-v k=$kmer name=$short_read_file\_temp se='$short_read_file\_1.fasta $short_read_file\_2.fasta $longreads'";
+#	    print "$string\n\n";
             run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
 	} else {
-#	    my $string="v=-v k=$kmer name=$short_read_file\_temp  lib='LIB' LIB='$short_read_file\_1.fasta $short_read_file\_2.fasta'";
-	    ## abyss single end
 	    my $string="v=-v k=$kmer name=$short_read_file\_temp  se='$short_read_file\_1.fasta $short_read_file\_2.fasta'";
-	    print "$string\n\n";
+#	    print "$string\n\n";
 	    run_command (get_bin($binaries->{'abyss-pe'}), $string,1);
 	}
-	##single end abyss
-	my $str = "$short_read_file\_temp-scaffolds.fa";
+	my $str = "$short_read_file\_temp-unitigs.fa";
 	my ($contigs, undef) = parsefasta ($str);
-	### paired end abyss
-#	my $str = "$short_read_file\_temp-contigs.fa";
-#	my ($contigs, undef) = parsefasta ($str);
-	print "$str\n\n";
+#	print "$str\n\n";
 	# copy ABySS log output to logfile.
 	open LOGFH, "<:crlf", "$tempdir/Log";
 	printlog ("Abyss log:");
@@ -103,20 +103,10 @@ sub assembler {
 	open OUTFH, ">", $output_file;
 	foreach my $contigname (keys %$contigs) {
 	    my $sequence = $contigs->{$contigname};
-	    #aTRAM-test-contigs.fa
-#	    $contigname =~ s/^NODE_(\d+)_length_(\d+)_cov_(\d+\.\d).*$/$1_len_$2_cov_$3/;
-#	    $contigname =~ s/^(\S+)-contigs.fa/$1/;
-#	    $contigname =~ s/^>(.*)/$1/;
 	    print OUTFH ">$contigname\n$sequence\n";
 	}
 	###### remove temp files from abyss
 	`rm $short_read_file\_temp*`; 
-	`rm $short_read_file\_temp*`; 
-#	`rm $short_read_file_1.fasta`;
-#	`rm $short_read_file_2.fasta`;
-	###abyss paired end
-#	`rm *.dist`;
-#	`rm *.hist`;
 	close OUTFH;	
 	return $contigs;
 }
